@@ -310,10 +310,14 @@ mark.p--major sup { color: var(--kraft); }
   </section>
 
   <section class="view wrap" id="v-survey" hidden>
-    <div class="card"><h3>体验问卷 · 约 1 分钟</h3><p class="hint" style="margin-top:6px">匿名。选完点“去提交”，会打开问卷星，点页面底部的“提交”即可；想说的话可以写在问卷星的留言框里。<br>Anonymous. “Submit” opens the survey site — just tap Submit (提交) there.</p></div>
+    <div class="card"><h3>体验问卷 · 约 1 分钟</h3><p class="hint" style="margin-top:6px">匿名。选完点最下面的按钮：答案码会自动复制并打开问卷星，在问卷星的输入框里<b>长按 → 粘贴</b>，再点“提交”。<br>Anonymous. The button copies your answer code and opens the survey page: long-press the box, Paste, then Submit.</p></div>
     <div class="card" id="svBody"></div>
-    <button class="btn btn--big btn--primary" id="svGo">去提交<small>Submit</small></button>
+    <div class="card"><div class="svq__t">最有用的是什么？最需要改进的是什么？（选填）<small>What was most useful? What most needs improvement? (optional)</small></div>
+      <textarea id="svCmt" rows="3" maxlength="300" style="width:100%;margin-top:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--rule);background:var(--page-2);color:inherit;font:inherit;resize:vertical"></textarea></div>
+    <button class="btn btn--big btn--primary" id="svGo">复制答案码并打开问卷星<small>Copy &amp; open the survey</small></button>
     <p class="hint" id="svHint" style="text-align:center"></p>
+    <div class="card" id="svManual" hidden><p class="hint" style="margin:0">自动复制没成功：长按下面这段答案码，选“全选”再“复制”，然后 <a id="svOpen" href="#">打开问卷星</a> 粘贴。</p>
+      <p id="svCode" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:var(--page-2);font:12px/1.4 ui-monospace,Consolas,monospace;word-break:break-all;user-select:all;-webkit-user-select:all"></p></div>
   </section>
 </main>
 
@@ -653,7 +657,7 @@ mark.p--major sup { color: var(--kraft); }
     return u + (u.indexOf("?") >= 0 ? "&" : "?") + "sojumpparm=" + encodeURIComponent(code) + hash;
   }
   function renderAbout() {
-    $("#surveyHint").textContent = survey().submit ? "最后会打开问卷星，点“提交”即可；不收集姓名。" : "提交链接还没设置（测试阶段）：可以先试，最后一步暂时提交不了。";
+    $("#surveyHint").textContent = survey().submit ? "最后答案码会自动复制，到问卷星粘贴并提交；不收集姓名。" : "提交链接还没设置（测试阶段）：可以先试，最后一步暂时提交不了。";
     $("#builtAt").textContent = "体验版生成于 " + ((DATA.meta && DATA.meta.built) || "") + "；收录 " + Object.keys(DATA.scenarios).length + " 次运行。";
   }
 
@@ -701,10 +705,31 @@ mark.p--major sup { color: var(--kraft); }
     b.parentNode.querySelectorAll("[data-q]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
     svCheck();
   });
+  /* 问卷星免费版不记录链接参数，所以答案码靠“自动复制＋在问卷星粘贴”；意见接在答案码后面一起粘贴 */
+  function copyText(text) {
+    var ok = false, ta = document.createElement("textarea");
+    ta.value = text; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;";
+    document.body.appendChild(ta);
+    ta.contentEditable = "true"; ta.readOnly = false;
+    var range = document.createRange(); range.selectNodeContents(ta);
+    var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+    ta.setSelectionRange(0, text.length);
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    document.body.removeChild(ta); sel.removeAllRanges();
+    if (ok) return Promise.resolve(true);
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return false; });
+    return Promise.resolve(false);
+  }
   $("#svGo").addEventListener("click", function () {
     var code = "X1_" + pid() + "_" + SV.ident + device() + "_" + SV.u1 + SV.u2 + "_" + SV.a + SV.b + SV.c + SV.d;
-    var url = submitUrl(code);
-    if (url) location.href = url; else toast("提交链接还没设置（测试阶段）。答案码：" + code);
+    var m = $("#svCmt").value.replace(/\s+/g, " ").trim().slice(0, 300);
+    var text = code + (m ? " 意见：" + m : ""), url = submitUrl(code);
+    $("#svCode").textContent = text; $("#svOpen").href = url || "#";
+    if (!url) { toast("提交链接还没设置（测试阶段）"); $("#svManual").hidden = false; return; }
+    copyText(text).then(function (ok) {
+      if (ok) { toast("已复制答案码，到问卷星长按→粘贴"); setTimeout(function () { location.href = url; }, 1100); }
+      else { $("#svManual").hidden = false; $("#svManual").scrollIntoView({ block: "center" }); toast("自动复制没成功，请手动复制"); }
+    });
   });
 
   /* ---------- 1 分钟演示 ---------- */
