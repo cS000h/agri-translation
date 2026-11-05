@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#E1E5DC" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#151916" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -310,17 +313,17 @@ mark.p--major sup { color: var(--kraft); }
   </section>
 
   <section class="view wrap" id="v-survey" hidden>
-    <div class="card"><h3>体验问卷 · 约 1 分钟</h3><p class="hint" style="margin-top:6px">匿名。选完点最下面的“复制答案码”，再点“打开问卷星”，在问卷星的输入框里<b>长按 → 粘贴</b>，然后点“提交”。<br>Anonymous. Tap “Copy code”, then “Open survey”: long-press the box, Paste, then Submit.</p></div>
+    <div class="card"><h3>体验问卷 · 约 1 分钟</h3><p class="hint" style="margin-top:6px">匿名。选完点最下面的“复制答案码并打开问卷星”，在问卷星的输入框里<b>长按 → 粘贴</b>，然后点“提交”。<br>Anonymous. Tap the button at the bottom: your code is copied and the survey opens. Long-press the box, Paste, then Submit.</p></div>
     <div class="card" id="svBody"></div>
     <div class="card"><div class="svq__t">最有用的是什么？最需要改进的是什么？（选填）<small>What was most useful? What most needs improvement? (optional)</small></div>
       <textarea id="svCmt" rows="3" maxlength="300" style="width:100%;margin-top:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--rule);background:var(--page-2);color:inherit;font:inherit;resize:vertical"></textarea></div>
-    <button class="btn btn--big btn--primary" id="svGo">复制答案码<small>Copy code</small></button>
+    <button class="btn btn--big btn--primary" id="svGo">复制答案码并打开问卷星<small>Copy &amp; open the survey</small></button>
     <p class="hint" id="svHint" style="text-align:center"></p>
     <div class="card" id="svBox" hidden><div class="svq__t">你的答案码<small>Your answer code</small></div>
       <textarea id="svCode" readonly rows="2" aria-label="答案码 Answer code" style="display:block;width:100%;margin-top:8px;padding:10px 12px;border-radius:12px;border:1px dashed var(--rule);background:var(--page-2);color:inherit;font:16px/1.45 ui-monospace,Consolas,monospace;word-break:break-all;resize:none;overflow:hidden;-webkit-user-select:text;user-select:text"></textarea>
       <p class="hint" id="svSt" role="status" aria-live="polite" style="margin:8px 0 0;font-weight:600;font-size:14px"></p>
-      <a class="btn btn--big" id="svOpen" href="#" style="margin-top:10px;text-decoration:none">打开问卷星，粘贴并提交<small>Open the survey, paste &amp; submit</small></a>
-      <p class="hint" style="margin:8px 0 0">问卷星里粘贴不出来？返回这一页，长按上面的答案码 → 全选 → 复制，再去粘贴。Can’t paste? Come back, long-press the code above → Select all → Copy.</p></div>
+      <p class="hint" style="margin:8px 0 0">问卷星里粘贴不出来？回到这一页，长按上面的答案码 → 全选 → 复制，再点下面的按钮去粘贴。Can’t paste? Come back, long-press the code above → Select all → Copy, then use the button below.</p>
+      <a class="btn btn--big" id="svOpen" href="#" style="margin-top:10px;text-decoration:none">已复制好了，直接打开问卷星<small>Copied already? Open the survey</small></a></div>
   </section>
 </main>
 
@@ -602,6 +605,9 @@ mark.p--major sup { color: var(--kraft); }
     ta.style.cssText = "position:fixed;top:0;left:0;width:2em;height:2em;padding:0;margin:0;border:0;outline:0;box-shadow:none;background:transparent;color:transparent;opacity:0.01;font-size:16px;";
     document.body.appendChild(ta);
     function onCopy(e) {
+      var sel = "";
+      try { sel = document.activeElement === ta ? ta.value.substring(ta.selectionStart, ta.selectionEnd) : String(window.getSelection()); } catch (err) { sel = ""; }
+      if (sel === text) { handled = true; return; }   /* 选区就是要复制的文字：让浏览器原生复制，不拦截 */
       try { if (e.clipboardData) { e.clipboardData.setData("text/plain", text); e.preventDefault(); handled = true; } } catch (err) { /* 忽略 */ }
     }
     document.addEventListener("copy", onCopy, true);
@@ -735,29 +741,37 @@ mark.p--major sup { color: var(--kraft); }
     svCheck();
   });
   /* 问卷星免费版不记录链接参数，所以答案码靠“复制＋在问卷星粘贴”；意见接在答案码后面一起粘贴。
-     11-05 起不再自动跳转：答案码一直显示（可长按手动复制），“复制”和“打开问卷星”是两个按钮 */
+     11-05 晚 V3：主按钮“复制答案码并打开问卷星”确认复制成功才跳转，失败就留在本页并选中答案码；答案码一直显示（可长按手动复制）；
+     “直接打开问卷星”跳转前也会先复制一次；点答案码框只全选、不再自动复制（自动复制会清掉选区，妨碍长按手动复制） */
   function svText() {
     var code = "X1_" + pid() + "_" + SV.ident + device() + "_" + SV.u1 + SV.u2 + "_" + SV.a + SV.b + SV.c + SV.d;
     var m = $("#svCmt").value.replace(/\s+/g, " ").trim().slice(0, 300);
     return { code: code, text: code + (m ? " 意见：" + m : "") };
   }
-  function svShow(ok) {
+  function svShow(ok, going) {
     var st = $("#svSt"), cd = $("#svCode");
     st.style.color = ok ? "var(--paddy)" : "var(--gold)";
-    st.textContent = ok ? "✓ 已复制。现在点“打开问卷星”，在输入框里长按 → 粘贴。Copied — now open the survey and paste."
-                        : "没能自动复制：请长按上面的答案码 → 全选 → 复制。Auto-copy failed: long-press the code above → Select all → Copy.";
-    $("#svOpen").classList.toggle("btn--primary", !!ok);
+    st.textContent = !ok ? "没能自动复制：请长按上面的答案码 → 全选 → 复制，再点“直接打开问卷星”。Auto-copy failed: long-press the code above → Select all → Copy."
+      : going ? "✓ 已复制，正在打开问卷星……到了以后在输入框里长按 → 粘贴。Copied — opening the survey."
+      : "✓ 已复制。Copied.";
     if (!ok) { try { cd.focus({ preventScroll: true }); } catch (e) { cd.focus(); } cd.select(); cd.scrollIntoView({ block: "center" }); }
   }
-  function svCopy() {
+  function svPrep() {
     var t = svText(), url = submitUrl(t.code), cd = $("#svCode");
     cd.value = t.text; $("#svBox").hidden = false; cd.style.height = "auto"; cd.style.height = (cd.scrollHeight + 2) + "px";
     $("#svOpen").href = url || "#";
-    if (!url) { toast("提交链接还没设置（测试阶段）"); return; }
-    copyText(t.text).then(svShow);
+    return { text: t.text, url: url };
   }
-  $("#svGo").addEventListener("click", svCopy);
-  $("#svCode").addEventListener("click", function () { this.select(); svCopy(); });
+  $("#svGo").addEventListener("click", function () {
+    var p = svPrep();
+    if (!p.url) { toast("提交链接还没设置（测试阶段）"); return; }
+    copyText(p.text).then(function (ok) {
+      svShow(ok, ok);
+      if (ok) setTimeout(function () { location.href = p.url; }, 800);
+    });
+  });
+  $("#svOpen").addEventListener("click", function () { copyText(svPrep().text); });   /* 跳转前先复制一次 */
+  $("#svCode").addEventListener("click", function () { this.select(); });
 
   /* ---------- 1 分钟演示 ---------- */
   var TOUR = [
