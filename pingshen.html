@@ -123,6 +123,13 @@ main { padding-block: 14px calc(28px + env(safe-area-inset-bottom, 0px)); }
 /* 结束 */
 .done h1 { font: 24px/1.35 var(--f-kai); }
 .code { margin-top: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font: 12px/1.4 ui-monospace, Consolas, monospace; color: var(--ink-3); word-break: break-all; }
+.codebox { display: block; width: 100%; margin-top: 8px; padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--rule); background: var(--page-2); color: var(--ink); font: 16px/1.45 ui-monospace, Consolas, monospace; word-break: break-all; resize: none; overflow: hidden; -webkit-user-select: text; user-select: text; }
+.cpst { margin: 8px 0 0; font-size: 14px; font-weight: 600; }
+.cpst:empty { display: none; }
+.cpst.ok { color: var(--paddy); }
+.cpst.bad { color: var(--gold); }
+.btn--stack { flex-direction: column; gap: 2px; min-height: 56px; text-decoration: none; color: inherit; }
+.btn--go { background: var(--paddy); border-color: var(--paddy); color: var(--page); font-weight: 600; }
 .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--page); padding: 10px 16px; border-radius: 999px; font-size: 14px; z-index: 60; }
 
 @media (min-width: 860px) {
@@ -224,7 +231,7 @@ main { padding-block: 14px calc(28px + env(safe-area-inset-bottom, 0px)); }
       '<p class="lead en" style="font-size:13px">Compare 2 pairs of English product pages and pick the better one in each. No right answers — go with your first impression. Anonymous; about 5 minutes.</p>' +
       '<ol class="howto"><li><b>1</b><span>点“版本 A”或“版本 B”切换着看（也可以左右滑）<span class="en">Tap “Version A / B” to switch (or swipe)</span></span></li>' +
       '<li><b>2</b><span>两版都看过后，在底部选更好的一版<span class="en">After viewing both, choose at the bottom</span></span></li>' +
-      '<li><b>3</b><span>最后答案码会自动复制，到问卷星粘贴并提交<span class="en">Finally your answer code is copied — paste it on the survey page and submit</span></span></li></ol></section>' +
+      '<li><b>3</b><span>最后复制答案码，到问卷星粘贴并提交<span class="en">Finally, copy your answer code, paste it on the survey page and submit</span></span></li></ol></section>' +
       '<section class="card" id="bgCard">' + BG.map(function (g) {
         return '<div class="qg"><div class="qg__t">' + esc(g[1]) + '<span class="en">' + esc(g[2]) + '</span></div><div class="opts" role="group" aria-label="' + esc(g[1]) + '">' +
           g[3].map(function (o) { return '<button class="opt" data-bg="' + g[0] + '" data-v="' + o[0] + '" aria-pressed="' + (S.bg[g[0]] === o[0]) + '">' + esc(o[1]) + '<span>' + esc(o[2]) + '</span></button>'; }).join("") + '</div></div>';
@@ -349,49 +356,90 @@ main { padding-block: 14px calc(28px + env(safe-area-inset-bottom, 0px)); }
   }
 
   /* ---------- 提交 ---------- */
-  /* 问卷星免费版不记录链接参数（11-04 实测：页面里的 sojumpParm 始终为空），所以答案码靠“自动复制＋在问卷星粘贴”交过去；
-     留言接在答案码后面一起粘贴，问卷星上只有一个输入框 */
+  /* 问卷星免费版不记录链接参数（11-04 实测：页面里的 sojumpParm 始终为空），所以答案码靠“复制＋在问卷星粘贴”交过去；
+     留言接在答案码后面一起粘贴，问卷星上只有一个输入框。
+     11-05 修正：旧写法在安卓微信、电脑 Chrome 等 Chromium 内核里没让隐藏输入框获得焦点，复制的是空选区，却照样报“成功”，
+     页面 1 秒后跳去问卷星，参与者既粘贴不出来也看不到答案码。现在：①在 copy 事件里直接写入要复制的文字，不依赖选区；
+     ②非 iOS 先聚焦并全选；③只有 copy 事件真的写入了、或 Clipboard API 成功才算成功；④不再自动跳转，答案码一直显示，可长按手动复制。 */
   function payload() {
     var m = String(S.comment || "").replace(/\s+/g, " ").trim().slice(0, 300);
     return code() + (m ? " 留言：" + m : "");
   }
   function copyText(text) {
-    /* 先用同步的 execCommand（微信内置浏览器更可靠，且仍在点击手势内），不行再用 Clipboard API */
-    var ok = false, ta = document.createElement("textarea");
-    ta.value = text; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;";
+    var handled = false, ok = false;
+    var ios = /iP(hone|ad|od)/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.setAttribute("readonly", ""); ta.setAttribute("aria-hidden", "true");
+    /* 放在视口内、几乎透明（opacity 0.01；有的移动内核会拒绝复制完全不可见的元素）；16px 字号避免 iOS 聚焦时放大页面 */
+    ta.style.cssText = "position:fixed;top:0;left:0;width:2em;height:2em;padding:0;margin:0;border:0;outline:0;box-shadow:none;background:transparent;color:transparent;opacity:0.01;font-size:16px;";
     document.body.appendChild(ta);
-    ta.contentEditable = "true"; ta.readOnly = false;
-    var range = document.createRange(); range.selectNodeContents(ta);
-    var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
-    ta.setSelectionRange(0, text.length);
-    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
-    document.body.removeChild(ta); sel.removeAllRanges();
-    if (ok) return Promise.resolve(true);
-    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return false; });
+    function onCopy(e) {   /* 不管选区里是什么，都把要复制的文字直接写进剪贴板 */
+      try { if (e.clipboardData) { e.clipboardData.setData("text/plain", text); e.preventDefault(); handled = true; } } catch (err) { /* 忽略 */ }
+    }
+    document.addEventListener("copy", onCopy, true);
+    try {
+      if (ios) {           /* iOS：只读框不能直接全选，先改成可编辑再用选区选中（组织者 iPad 微信已验证） */
+        ta.contentEditable = "true"; ta.readOnly = false;
+        var range = document.createRange(); range.selectNodeContents(ta);
+        var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+        ta.setSelectionRange(0, text.length);
+      } else {             /* 安卓与电脑：先聚焦再全选，否则复制的是空选区 */
+        try { ta.focus({ preventScroll: true }); } catch (e1) { ta.focus(); }
+        ta.select(); ta.setSelectionRange(0, text.length);
+      }
+      ok = document.execCommand("copy");
+    } catch (e) { ok = false; }
+    document.removeEventListener("copy", onCopy, true);
+    document.body.removeChild(ta);
+    try { window.getSelection().removeAllRanges(); } catch (e) { /* 忽略 */ }
+    copyText.info = "exec=" + ok + " event=" + handled + (ios ? " ios" : "");   /* 诊断用：网址后加 ?debug 时显示 */
+    if (ok && handled) return Promise.resolve(true);
+    if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+      try {
+        return navigator.clipboard.writeText(text).then(function () { copyText.info += " api=ok"; return true; },
+          function (err) { copyText.info += " api=" + ((err && err.name) || "fail"); return false; });
+      } catch (e) { copyText.info += " api=throw"; }
+    } else copyText.info += " api=none";
     return Promise.resolve(false);
   }
   function renderDone() {
     var app = $("#app"), url = submitUrl();
     app.className = "wrap view";
     app.innerHTML = '<section class="card done"><h1>' + (S.submitted ? "如果还没在问卷星点“提交”，可以再来一次" : "最后一步：提交") + "</h1>" +
-      '<ol class="howto"><li><b>1</b><span>点下面的绿色按钮：答案码会自动复制，并打开问卷星<span class="en">Tap the button: your answer code is copied and the survey page opens</span></span></li>' +
-      '<li><b>2</b><span>在问卷星的输入框里<strong>长按 → 粘贴</strong><span class="en">Long-press the box there and tap Paste</span></span></li>' +
+      '<ol class="howto"><li><b>1</b><span>点绿色按钮<strong>“复制答案码”</strong>，看到“已复制”<span class="en">Tap “Copy code” and wait for “Copied”</span></span></li>' +
+      '<li><b>2</b><span>点<strong>“打开问卷星”</strong>，在输入框里<strong>长按 → 粘贴</strong><span class="en">Tap “Open survey”, then long-press the box → Paste</span></span></li>' +
       '<li><b>3</b><span>点“提交”，完成！<span class="en">Tap Submit (提交). Done!</span></span></li></ol></section>' +
       '<section class="card"><label class="qg__t" for="cmt">还有什么想告诉我们的吗？（选填）<span class="en">Anything else? (optional)</span></label>' +
       '<textarea id="cmt" rows="3" maxlength="300" style="width:100%;margin-top:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--rule);background:var(--page-2);color:inherit;font:inherit;resize:vertical">' + esc(S.comment || "") + "</textarea></section>" +
-      (url ? '<button class="btn btn--primary btn--block" id="sub" style="min-height:60px;flex-direction:column;gap:2px;background:var(--paddy);border-color:var(--paddy);color:var(--page)">复制答案码并打开问卷星<small>Copy &amp; open the survey</small></button>'
-           : '<p class="card lead">提交链接还没设置（测试阶段）。· The submit link is not set yet.</p>') +
-      '<div class="card" id="manual"' + (S.submitted ? "" : " hidden") + '><p class="lead" style="margin:0">如果问卷星里粘贴不出来：长按下面这段答案码，选“全选”再“复制”，然后<a id="openWjx" href="' + esc(url) + '">打开问卷星</a>粘贴。<span class="en">If pasting fails, long-press the code below, Select All → Copy, then open the survey and paste.</span></p>' +
-      '<p class="code" id="cd" style="user-select:all;-webkit-user-select:all;background:var(--page-2);padding:8px 10px;border-radius:10px;color:var(--ink)">' + esc(payload()) + "</p></div>";
-    $("#cmt").addEventListener("input", function () { S.comment = this.value; save(); var cd = $("#cd"); if (cd) cd.textContent = payload(); });
-    if (url) $("#sub").onclick = function () {
+      '<section class="card"><div class="eyebrow">你的答案码 · YOUR ANSWER CODE</div>' +
+      '<textarea id="cd" class="codebox" readonly rows="2" aria-label="答案码 Answer code">' + esc(payload()) + "</textarea>" +
+      '<p class="cpst" id="cpSt" role="status" aria-live="polite"></p></section>' +
+      (url ? '<button class="btn btn--block btn--stack btn--go" id="cp">复制答案码<small>Copy code</small></button>' +
+             '<a class="btn btn--block btn--stack" id="go" href="' + esc(url) + '">打开问卷星，粘贴并提交<small>Open the survey, paste &amp; submit</small></a>' +
+             '<p class="lead" style="text-align:center">问卷星里粘贴不出来？返回这一页，长按上面的答案码 → 全选 → 复制，再去粘贴。<span class="en">Can’t paste? Come back, long-press the code above → Select all → Copy, then paste.</span></p>'
+           : '<p class="card lead">提交链接还没设置（测试阶段）。· The submit link is not set yet.</p>');
+    var cd = $("#cd"), st = $("#cpSt");
+    function fit() { cd.style.height = "auto"; cd.style.height = (cd.scrollHeight + 2) + "px"; }
+    function show(ok) {
+      st.className = "cpst " + (ok ? "ok" : "bad");
+      st.innerHTML = ok ? '✓ 已复制。现在点“打开问卷星”，在输入框里长按 → 粘贴。<span class="en">Copied. Now open the survey and paste.</span>'
+                        : '没能自动复制：请长按上面的答案码 → 全选 → 复制。<span class="en">Auto-copy failed: long-press the code above → Select all → Copy.</span>';
+      if (/[?&]debug\b/.test(location.search)) st.innerHTML += '<span class="en">诊断：' + esc(copyText.info + " | " + navigator.userAgent) + "</span>";
+      if (ok) { $("#go").classList.add("btn--go"); $("#cp").classList.remove("btn--go"); }
+      else { try { cd.focus({ preventScroll: true }); } catch (e) { cd.focus(); } cd.select(); cd.scrollIntoView({ block: "center" }); }
+    }
+    function doCopy() {
       S.comment = $("#cmt").value; S.submitted = true; save();
-      var text = payload(); $("#cd").textContent = text;
-      copyText(text).then(function (ok) {
-        if (ok) { toast("已复制答案码，到问卷星长按→粘贴 · Copied"); setTimeout(function () { location.href = url; }, 1100); }
-        else { $("#manual").hidden = false; $("#manual").scrollIntoView({ block: "center" }); toast("自动复制没成功，请手动复制 · Please copy manually"); }
-      });
-    };
+      cd.value = payload(); fit();
+      copyText(cd.value).then(show);
+    }
+    fit();
+    $("#cmt").addEventListener("input", function () { S.comment = this.value; save(); cd.value = payload(); fit(); });
+    cd.addEventListener("click", function () { this.select(); if (url) doCopy(); });
+    if (url) {
+      $("#cp").onclick = doCopy;
+      $("#go").addEventListener("click", function () { S.submitted = true; save(); });
+    }
   }
 
   WIDE.addEventListener && WIDE.addEventListener("change", function () { if (S.stage === "pair") renderPair(); });
