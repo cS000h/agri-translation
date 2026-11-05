@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#E1E5DC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151916" media="(prefers-color-scheme: dark)">
+<meta name="description" content="商品页评审：比较两版英文商品页，选出更好的一版。匿名，约 5 分钟。">
+<title>商品页评审</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231D2420'/%3E%3Cpath d='M16 22h14M16 32h14M16 42h14M36 22h12M36 32h12M36 42h8' stroke='%23F4E5B3' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+/* 商品页评审 · 手机优先：一次只看一组；版本 A/B 原地切换（点或左右滑），选择按钮固定在底部；宽屏左右并排。配色与体验版一致 */
+:root {
+  --desk: #E1E5DC; --page: #FBFBF7; --page-2: #F2F4EE; --ink: #1D2420; --ink-2: #545E57; --ink-3: #7C857F;
+  --rule: #C9CFC3; --rule-2: #DDE1D7; --gold: #A87A0A; --gold-tint: #F4E5B3; --paddy: #2F7A4D; --paddy-tint: #DCEBDF;
+  --scrim: rgba(29, 36, 32, .38);
+  --f-ui: system-ui, -apple-system, "PingFang SC", "HarmonyOS Sans SC", "MiSans", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --f-kai: "KaiTi", "STKaiti", "Kaiti SC", "楷体", "LXGW WenKai", serif;
+  --f-en: "Charter", "Iowan Old Style", "Sitka Text", "Palatino Linotype", Georgia, serif;
+  --f-label: "Bahnschrift", "DIN Alternate", "Roboto Condensed", "Segoe UI", sans-serif;
+  --r: 14px; --shadow: 0 1px 0 rgba(29, 36, 32, .05), 0 10px 30px -22px rgba(29, 36, 32, .5);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --desk: #151916; --page: #1D221E; --page-2: #242A25; --ink: #E6EAE3; --ink-2: #B1BAB2; --ink-3: #848D86;
+    --rule: #3A423B; --rule-2: #2D342E; --gold: #D9AA43; --gold-tint: #3B3320; --paddy: #73C08F; --paddy-tint: #1F3327;
+    --scrim: rgba(0, 0, 0, .55); --shadow: 0 1px 0 rgba(0, 0, 0, .3), 0 10px 30px -18px rgba(0, 0, 0, .8); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --desk: #151916; --page: #1D221E; --page-2: #242A25; --ink: #E6EAE3; --ink-2: #B1BAB2; --ink-3: #848D86;
+  --rule: #3A423B; --rule-2: #2D342E; --gold: #D9AA43; --gold-tint: #3B3320; --paddy: #73C08F; --paddy-tint: #1F3327;
+  --scrim: rgba(0, 0, 0, .55); --shadow: 0 1px 0 rgba(0, 0, 0, .3), 0 10px 30px -18px rgba(0, 0, 0, .8); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--desk); color: var(--ink); font: 15px/1.6 var(--f-ui); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 6px; }
+[hidden] { display: none !important; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+.wrap { max-width: 720px; margin: 0 auto; padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); }
+.en { display: block; color: var(--ink-3); font-size: 12.5px; line-height: 1.45; }
+
+/* 顶栏 */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--desk); z-index: 30; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--desk) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--rule-2); }
+.bar__in { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; }
+.brand { font: 21px/1 var(--f-kai); letter-spacing: .1em; }
+.brand small { font: 12px/1 var(--f-label); letter-spacing: .04em; color: var(--ink-3); margin-left: 8px; }
+.steps { display: flex; gap: 5px; align-items: center; }
+.steps i { width: 22px; height: 6px; border-radius: 3px; background: var(--rule-2); }
+.steps i.done { background: var(--paddy); }
+.steps i.now { background: var(--gold); }
+.steps i.opt { width: 12px; }
+main { padding-block: 14px calc(28px + env(safe-area-inset-bottom, 0px)); }
+.view { display: grid; gap: 12px; }
+
+/* 通用 */
+.card { background: var(--page); border: 1px solid var(--rule-2); border-radius: var(--r); padding: 14px 16px; box-shadow: var(--shadow); min-width: 0; }
+.eyebrow { font: 12px/1.3 var(--f-label); letter-spacing: .06em; color: var(--ink-3); }
+.lead { color: var(--ink-2); font-size: 14px; margin-top: 6px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--rule); background: var(--page); font-size: 15px; }
+.btn--primary { background: var(--ink); color: var(--page); border-color: var(--ink); font-weight: 600; }
+.btn--block { width: 100%; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn small { font-weight: 400; opacity: .75; font-size: 12.5px; }
+.link { color: var(--ink-3); text-decoration: underline; text-underline-offset: 3px; font-size: 13px; min-height: 36px; }
+
+/* 开场 */
+.howto { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.howto li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; font-size: 14px; }
+.howto b { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--paddy-tint); color: var(--paddy); font: 600 13px/1 var(--f-label); }
+.qg { display: grid; gap: 8px; }
+.qg + .qg { margin-top: 14px; }
+.qg__t { font-weight: 600; font-size: 14.5px; }
+.qg__t .en { display: inline; margin-left: 6px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.opt { min-height: 42px; padding: 6px 12px; border-radius: 12px; border: 1px solid var(--rule); background: var(--page); font-size: 14px; line-height: 1.3; text-align: center; }
+.opt span { display: block; font-size: 11.5px; color: var(--ink-3); }
+.opt[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--page); }
+.opt[aria-pressed="true"] span { color: color-mix(in srgb, var(--page) 75%, transparent); }
+.consent { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; padding: 4px 0; cursor: pointer; }
+.consent input { width: 22px; height: 22px; margin: 1px 0 0; accent-color: var(--paddy); flex: none; }
+
+/* 一组 */
+.prod { font-weight: 600; font-size: 15.5px; margin-top: 2px; }
+.ask { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--rule); font-size: 14.5px; }
+.switch { position: sticky; top: calc(52px + env(safe-area-inset-top, 0px)); z-index: 15; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 14px; background: var(--page-2); border: 1px solid var(--rule); box-shadow: 0 6px 16px -14px rgba(0, 0, 0, .6); }
+.switch button { min-height: 46px; border-radius: 10px; text-align: center; font-size: 15px; color: var(--ink-2); display: flex; align-items: center; justify-content: center; gap: 6px; }
+.switch button[aria-selected="true"] { background: var(--page); color: var(--ink); font-weight: 700; box-shadow: 0 1px 2px rgba(0, 0, 0, .14); }
+.switch .seen { font: 12px/1 var(--f-ui); color: var(--paddy); font-weight: 600; }
+.vers { display: grid; gap: 12px; touch-action: pan-y; }
+.ver { scroll-margin-top: calc(120px + env(safe-area-inset-top, 0px)); }
+.ver__lab { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.ver__lab b { font: 700 13px/1.3 var(--f-label); letter-spacing: .08em; color: var(--gold); }
+.ver h2 { font: 700 17px/1.45 var(--f-en); margin-top: 8px; overflow-wrap: anywhere; }
+.ver ul { margin: 10px 0 0; padding-left: 18px; font: 15px/1.6 var(--f-en); overflow-wrap: anywhere; }
+.ver li { margin: 6px 0; }
+.ver li::marker { color: var(--ink-3); }
+.nudge { text-align: center; color: var(--ink-2); font-size: 13.5px; padding: 4px 0; }
+.nudge button { color: var(--ink); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; min-height: 40px; padding: 0 4px; }
+.pad { height: 150px; }
+.choose { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; background: color-mix(in srgb, var(--desk) 94%, transparent); backdrop-filter: blur(8px); border-top: 1px solid var(--rule); padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px)); }
+.choose__q { font-size: 13px; color: var(--ink-2); margin-bottom: 8px; text-align: center; }
+.choose__btns { display: grid; grid-template-columns: 1fr .82fr 1fr; gap: 8px; }
+.pick { min-height: 54px; border-radius: 12px; border: 1px solid var(--rule); background: var(--page); text-align: center; font-weight: 700; font-size: 15px; line-height: 1.25; }
+.pick span { display: block; font-weight: 400; font-size: 11.5px; color: var(--ink-3); }
+.pick:disabled { opacity: .4; cursor: not-allowed; }
+.pick[aria-pressed="true"] { background: var(--ink); color: var(--page); border-color: var(--ink); }
+.pick[aria-pressed="true"] span { color: color-mix(in srgb, var(--page) 75%, transparent); }
+.choose__hint { text-align: center; font-size: 12.5px; color: var(--ink-3); margin-top: 6px; }
+
+/* 原因（底部面板） */
+.scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 40; }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 41; background: var(--page); border-radius: 18px 18px 0 0; box-shadow: 0 -10px 40px -20px rgba(0, 0, 0, .6); padding: 16px 0 calc(16px + env(safe-area-inset-bottom, 0px)); max-height: 88vh; overflow: auto; }
+.sheet h3 { font-size: 16px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.chips .opt { text-align: left; }
+.sheet__acts { display: grid; grid-template-columns: auto 1fr; gap: 10px; margin-top: 16px; }
+
+/* 结束 */
+.done h1 { font: 24px/1.35 var(--f-kai); }
+.code { margin-top: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font: 12px/1.4 ui-monospace, Consolas, monospace; color: var(--ink-3); word-break: break-all; }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--page); padding: 10px 16px; border-radius: 999px; font-size: 14px; z-index: 60; }
+
+@media (min-width: 860px) {
+  .wrap--pair { max-width: 1120px; }
+  .switch, .nudge { display: none; }
+  .vers { grid-template-columns: 1fr 1fr; align-items: start; }
+  .vers .ver[hidden] { display: block !important; }
+}
+@media (prefers-reduced-motion: no-preference) { .ver { animation: fade .18s ease both; } @keyframes fade { from { opacity: .3; } to { opacity: 1; } } }
+</style>
+</head>
+<body>
+<header class="bar"><div class="wrap wrap--pair bar__in"><div class="brand">商品页评审<small>Product Page Review</small></div><div class="steps" id="steps" aria-hidden="true"></div></div></header>
+<main class="wrap" id="app"></main>
+<div class="scrim" id="scrim" hidden></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetT" hidden><div class="wrap" id="sheetIn"></div></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script id="data" type="application/json">{"v":"L1","submit":"","products":{"T1":{"zh":"安化黑茶·茯砖（中国湖南出产的一种茶，400 克/块）","en":"Anhua Fu brick tea (a tea from Hunan, China; 400 g brick)"},"S1":{"zh":"郫县豆瓣酱（四川的一种烹饪调味酱，500 克/瓶）","en":"Pixian doubanjiang (a cooking sauce from Sichuan, China; 500 g jar)"},"R1":{"zh":"五常大米·稻花香 2 号（黑龙江出产的大米，5 千克/箱）","en":"Wuchang rice, Daohuaxiang No. 2 (rice from Heilongjiang, China; 5 kg box)"}},"copies":{"T1":{"SG":{"title":"Anhua Dark Tea Hand-Built Golden Flower Fu Brick Tea, 400g (14.1 oz) Brick, Grade 1 Raw Dark Tea from Hunan, Pile Fermented","bullets":["ORIGIN: Made in Anhua, a county in Hunan Province, China, from fresh leaves picked in local Anhua tea gardens and processed into Grade 1 raw dark tea (heicha maocha).","CRAFT: The raw tea undergoes pile fermentation (a key dark tea process), is steam-softened, then hand-built into a brick — not machine-pressed — and 'flowered' in a temperature- and humidity-controlled drying room for about 20 days.","GOLDEN FLOWER: The 'flowering' process cultivates Golden Flower (Eurotium cristatum), visible as golden particles inside the brick when broken open.","TASTE & BREWING: The brick surface is flat; the liquor is bright orange-red, mellow and not bitter, with a distinctive 'fungal floral' aroma and a clear sweet aftertaste. Break off about 5 g (0.18 oz), rinse once with 100°C (212°F) boiling water for about 10 seconds and discard, then steep 30 seconds to 1 minute per infusion; can be re-steeped 8+ times. Can also be boiled in a pot for a richer flavor.","STORAGE & PACKAGING: Store at room temperature, away from light, in a dry, ventilated place, free from strong odors. Kraft paper wrap with an outer hand-carry gift box. Production date: September 2025."]},"B":{"title":"Anhua Dark Tea Handcrafted Golden Flower Fu Brick Tea – 400g | Traditional Chinese Fermented Tea with Probiotic \"Golden Flowers\"","bullets":["Rare \"Golden Flowers\" – The Mark of True Quality: Each brick is carefully cultivated over ~20 days in temperature- and humidity-controlled rooms to grow golden \"Golden Flowers\" (Eurotium cristatum), a beneficial probiotic fungus. The more golden flowers, the higher the quality — and you can see them clearly when you break the brick open.","Authentic Anhua Origin & Traditional Craft: Made from fresh leaves grown in local tea gardens in Anhua County, Hunan — first crafted into Grade 1 dark mao cha, then steam-softened and hand-pressed into bricks using centuries-old techniques. This is the same \"border-sale tea\" once carried along ancient trade routes and treasured by nomadic communities as their \"tea of life.\"","Smooth, Mellow Taste with Unique Floral Aroma: Brews a bright orange-red liquor that's mellow and never bitter, with a distinctive \"fungal floral\" fragrance and a clear, pleasant sweetness that lingers. A gentle, easy-drinking cup for everyday enjoyment.","Supports Digestion & Everyday Wellness: Traditionally enjoyed to help cut through greasiness after meals, support digestion, and promote healthy blood lipid and blood sugar levels — a natural wellness companion for modern, rich diets.","Versatile Brewing & Ages Beautifully: Use about 5g, rinse once with 100°C boiling water (~10 seconds), then steep 30 seconds to 1 minute per infusion — good for 8+ steepings. Boil it in a pot for an even richer, deeper flavor. Store in a cool, dark, dry, odor-free place; like fine tea, it improves with age."]},"BG":{"title":"Anhua Dark Tea Handcrafted Golden Flower Fu Brick Tea – 400g | Traditional Chinese Fermented Tea with \"Golden Flowers\" (Eurotium cristatum)","bullets":["Rare \"Golden Flowers\" – A Prized Visual Feature: Each brick is carefully cultivated over ~20 days in temperature- and humidity-controlled rooms to grow golden \"Golden Flowers\" (Eurotium cristatum), the golden granules formed during flowering. Golden flowers are a prized visual feature of Fu brick tea — and you can see them clearly when you break the brick open.","Authentic Anhua Origin & Traditional Craft: Made from fresh leaves grown in local tea gardens in Anhua County, Hunan — first crafted into Grade 1 dark mao cha, then steam-softened and hand-pressed into bricks. This is the same \"border-sale tea\" once carried along ancient trade routes and treasured by nomadic communities as their \"tea of life.\"","Smooth, Mellow Taste with Unique Floral Aroma: Brews a bright orange-red liquor that's mellow with little bitterness, with a distinctive \"fungal floral\" fragrance and a clear, pleasant sweetness that lingers. A gentle, easy-drinking cup for everyday enjoyment.","A Comforting Cup for Rich Dishes: A warm, mellow cup to pair with hearty, rich dishes — a pleasant companion to a satisfying meal.","Versatile Brewing & Ages Beautifully: Use about 5g, rinse once with 100°C boiling water (~10 seconds), then steep 30 seconds to 1 minute per infusion — good for 8+ steepings. Boil it in a pot for an even richer, deeper flavor. Store in a cool, dark, dry, odor-free place; like fine tea, it improves with age."]}},"S1":{"SG":{"title":"Pixian Doubanjiang (Fermented Chili Bean Paste with Red Oil), Medium Heat, 500 g Glass Jar","bullets":["WHAT IT IS: Pixian Doubanjiang is a fermented chili bean paste with red oil from Pixian (Pidu District, Chengdu, Sichuan) — a base seasoning for many classic Sichuan dishes such as twice-cooked pork (huiguorou), mapo tofu, and fish in chili bean sauce (douban yu).","HOW TO USE: Heat oil over low heat, add the paste, and stir-fry until the red oil releases and it becomes fragrant, then add your other ingredients. This paste is quite salty—reduce or omit added salt in your recipe.","TASTE AND TEXTURE: Deep savory fermented chili bean paste aroma; salty-savory with medium heat; reddish-brown and glossy with red oil; visible chili and bean bits.","INGREDIENTS AND ALLERGENS: Fresh red Erjingtiao chili peppers, fava beans (broad beans), salt, wheat flour (contains wheat/gluten), rapeseed oil.","STORAGE AND SIZE: 500 g glass jar; refrigerate after opening in a sealed container and use a clean, dry spoon."]},"B":{"title":"Pixian Doubanjiang (Red Oil Broad Bean Paste) – 500g Glass Jar | The Soul of Sichuan Cuisine | 12-Month Naturally Fermented, No Preservatives","bullets":["Authentic \"Soul of Sichuan Cuisine\" – Made in Pixian, Chengdu (the protected origin region), where this legendary paste has been crafted for centuries and is recognized as a National Intangible Cultural Heritage and Geographic Indication product.","12+ Months of Traditional Natural Fermentation – Crafted using the time-honored \"turn, sun-dry, and dew\" method: fresh erjingtiao chilies and fermented broad beans are aged in open-air clay vats, sun-dried by day and dew-kissed by night for a deep, complex flavor.","Bold, Layered Flavor with Visible Texture – Rich reddish-brown color, glossy red oil, intense savory aroma, and a medium heat with distinct bits of chili and broad bean for authentic mouthfeel.","No Preservatives, Clean Ingredients – Just fresh red chilies, broad beans, salt, wheat flour, and rapeseed oil. Naturally fermented, zero added preservatives—a healthier choice with no compromise on taste.","Essential for Authentic Sichuan Cooking – The base seasoning for classics like twice-cooked pork, mapo tofu, and fish with chili bean sauce. Simply stir-fry in warm oil to release the red oil and aroma—note it's salty, so reduce added salt in your dishes."]},"BG":{"title":"Pixian Doubanjiang (Red Oil Broad Bean Paste) – 500g Glass Jar | The Soul of Sichuan Cuisine | Fermented for Over 12 Months","bullets":["Authentic \"Soul of Sichuan Cuisine\" – Made in the Pixian region of Chengdu, traditionally made in the Pixian region; its traditional production technique is China's national intangible cultural heritage (listed in 2008).","12+ Months of Traditional Natural Fermentation – Crafted using the time-honored \"turn, sun-dry, and dew\" method: fresh erjingtiao chilies and fermented broad beans are aged in open-air clay vats, sun-dried by day and dew-kissed by night for a deep, complex flavor.","Bold, Layered Flavor with Visible Texture – Rich reddish-brown color, glossy red oil, intense savory aroma, and a medium heat with distinct bits of chili and broad bean for authentic mouthfeel.","Made from Just Five Ingredients – Fresh red chilies, broad beans, salt, wheat flour, and rapeseed oil, traditionally fermented in open-air clay vats. Contains: wheat (gluten).","Essential for Authentic Sichuan Cooking – The base seasoning for classics like twice-cooked pork, mapo tofu, and fish with chili bean sauce. Simply stir-fry in warm oil to release the red oil and aroma—note it's salty, so reduce added salt in your dishes."]}},"R1":{"SG":{"title":"Wuchang Rice (from Wuchang, a rice-growing region in Harbin, Heilongjiang, China) Daohuaxiang 2 Japonica Rice, 5 kg (2.5 kg x 2 Vacuum Bags)","bullets":["ORIGIN: Wuchang rice (from Wuchang, a rice-growing region in Harbin, Heilongjiang, China) is grown in the black soil of Northeast China (a fertile soil region) and irrigated by the Lalin River system.","VARIETY: Daohuaxiang 2 (a japonica rice variety) — japonica rice (the short-grain type used for sushi rice), grown as a single annual crop (one harvest per year) with about 145 days of growth.","FRESHNESS: Harvested in October 2025 and kept in cold storage, then milled to order and packed in vacuum packaging; the milling date is printed on the package.","TEXTURE AND AROMA: The grains are slender and plump; cooked rice is glossy, soft, sticky, and springy, with a natural rice-flower aroma, and stays soft after cooling.","COOKING AND STORAGE: Rinse 1–2 times without scrubbing hard, use a rice-to-water ratio of about 1:1.2 (e.g., 1 cup rice to 1.2 cups water), and soak for 20–30 minutes before cooking; store in a cool, dry, dark place and reseal the bag after opening.","SIZE: 5 kg per box, containing 2.5 kg x 2 vacuum bags."]},"B":{"title":"Wuchang Daohuaxiang 2 Premium Rice – 5kg (2.5kg × 2 Vacuum-Sealed Bags) | Fresh 2025 Harvest from Northeast China's Black Soil","bullets":["Authentic Wuchang Rice from China's Protected Origin – Grown in Wuchang City, Heilongjiang Province, a nationally recognized Geographical Indication (GI) region famous for premium japonica rice. Daohuaxiang 2 variety, single-season harvest with a ~145-day growing period.","Northeast Black Soil & Lalin River Irrigation – Cultivated in nutrient-rich black soil with large day-night temperature swings, irrigated by the Lalin River water system. No polishing, no waxing, no additives — just clean, natural rice.","Fresh 2025 Harvest, Milled to Order – Harvested in October 2025 and stored at low temperature. Each order is milled fresh and vacuum-sealed in two 2.5kg bags for maximum freshness. Milling date printed on the package.","Soft, Springy Texture with Natural Rice Aroma – Long, slender, translucent grains cook up glossy and plump with a soft, chewy bite and a delicate natural fragrance. Stays tender even after cooling — perfect for bento, meal prep, and leftovers.","Easy to Cook, Family-Friendly 5kg Value Pack – Rinse 1–2 times gently (no scrubbing). Use a ~1:1.2 rice-to-water ratio in your rice cooker; soak 20–30 minutes before cooking for best texture. 5kg total (2.5kg × 2 vacuum bags) — a taste of home-cooked rice, the way mom made it."]},"BG":{"title":"Wuchang Daohuaxiang 2 Premium Rice – 5kg (2.5kg × 2 Vacuum-Sealed Bags) | Fresh 2025 Harvest from Northeast China's Black Soil","bullets":["Wuchang Rice from Wuchang City, Heilongjiang Province – Grown in Wuchang City, Heilongjiang Province, a region known in China for Wuchang rice and premium japonica rice. Daohuaxiang 2 variety, single-season harvest with a ~145-day growing period.","Northeast Black Soil & Lalin River Irrigation – Cultivated in nutrient-rich black soil, irrigated by the Lalin River water system.","Fresh 2025 Harvest, Milled to Order – Harvested in October 2025 and stored at low temperature. Each order is milled fresh and vacuum-sealed in two 2.5kg bags for maximum freshness. Milling date printed on the package.","Soft, Springy Texture with Natural Rice Aroma – Long, slender, translucent grains cook up glossy and plump with a soft, chewy bite and a delicate natural fragrance. Stays tender even after cooling — perfect for bento, meal prep, and leftovers.","Easy to Cook, Family-Friendly 5kg Value Pack – Rinse 1–2 times gently (no scrubbing). Use a ~1:1.2 rice-to-water ratio in your rice cooker; soak 20–30 minutes before cooking for best texture. 5kg total (2.5kg × 2 vacuum bags) — a taste of home-cooked rice, the way mom made it."]}}}}</script>
+<script>
+(function () {
+  "use strict";
+  var DATA = JSON.parse(document.getElementById("data").textContent.replace("/*__DATA__*/", "") || "{}");
+  var KEY = "cyt-pingshen-v1", IDKEY = "cyt-pid";
+  var $ = function (s, el) { return (el || document).querySelector(s); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var WIDE = window.matchMedia("(min-width: 860px)");
+  var BG = [
+    ["ident", "你的身份", "You are", [["T", "高校教师", "Teacher"], ["C", "国内在读学生", "Student in China"], ["I", "留学生", "International student"], ["O", "其他", "Other"]]],
+    ["eng", "英语水平", "English", [["N", "母语", "Native"], ["E", "接近母语", "Near-native"], ["F", "熟练", "Fluent"], ["B", "一般", "Basic"]]],
+    ["shop", "在英文购物网站买过食品吗", "Bought food on English shopping sites?", [["O", "经常", "Often"], ["S", "偶尔", "Sometimes"], ["N", "没有", "Never"]]]
+  ];
+  var REASONS = [[1, "更容易看懂", "Easier to understand"], [2, "更可信", "More trustworthy"], [4, "更吸引人", "More appealing"], [8, "没有夸大或可疑的说法", "No exaggerated or questionable claims"]];
+
+  function load() { try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { return null; } }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* 存不住也能做完，只是中途关掉会从头开始 */ } }
+  function pid() {
+    var id = null;
+    try { id = localStorage.getItem(IDKEY); } catch (e) { /* 忽略 */ }
+    if (!id || id.length < 6) { id = ""; for (var i = 0; i < 6; i++) id += "abcdefghijkmnpqrstuvwxyz23456789".charAt(Math.floor(Math.random() * 32)); try { localStorage.setItem(IDKEY, id); } catch (e) { /* 忽略 */ } }
+    return id;
+  }
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  /* 随机分配：三个商品顺序随机；必做的前两组一组对“通用营销”(B)、一组对“通用营销+核查”(BG)；选做的第三组随机；完整系统放在 A 还是 B 也随机 */
+  function assign() {
+    var prods = shuffle(["T1", "S1", "R1"]), cmps = shuffle(["B", "BG"]);
+    cmps.push(Math.random() < 0.5 ? "B" : "BG");
+    return prods.map(function (p, i) { return { p: p, c: cmps[i], pos: Math.random() < 0.5 ? "A" : "B", view: "A", seenA: false, seenB: false, choice: null, reasons: 0, ms: 0 }; });
+  }
+  var S = load();
+  if (!S || S.v !== DATA.v || !S.pairs) S = { v: DATA.v, id: pid(), stage: "intro", idx: 0, bg: {}, consent: false, pairs: assign(), n: 2, submitted: false };
+  var tStart = Date.now();
+
+  function versionOf(pr, side) { return DATA.copies[pr.p][side === pr.pos ? "SG" : pr.c]; }
+  function code() {
+    var parts = [DATA.v, S.id, (S.bg.ident || "O") + (S.bg.eng || "F") + (S.bg.shop || "N")];
+    var total = 0;
+    S.pairs.slice(0, S.n).forEach(function (pr) {
+      if (!pr.choice) return;
+      var sec = Math.min(999, Math.round(pr.ms / 1000)); total += sec;
+      parts.push(pr.p.charAt(0) + (pr.c === "B" ? "b" : "g") + pr.pos + pr.choice + pr.reasons.toString(16) + "x" + sec);
+    });
+    parts.push("t" + total);
+    return parts.join("_");
+  }
+  function submitUrl() {
+    var u = DATA.submit || ""; if (!u) return "";
+    var hash = ""; var k = u.indexOf("#"); if (k >= 0) { hash = u.slice(k); u = u.slice(0, k); }
+    return u + (u.indexOf("?") >= 0 ? "&" : "?") + "sojumpparm=" + encodeURIComponent(code()) + hash;
+  }
+  function toast(t) { var el = $("#toast"); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(function () { el.hidden = true; }, 1800); }
+  function steps() {
+    var h = "";
+    for (var i = 0; i < 3; i++) {
+      var finished = S.stage === "pair" ? i < S.idx : (S.stage === "done" || S.stage === "more") && i < S.n;
+      var cls = finished ? "done" : S.stage === "pair" && i === S.idx ? "now" : "";
+      if (i === 2 && S.n < 3 && S.stage !== "pair") cls += " opt";
+      h += '<i class="' + cls + '"></i>';
+    }
+    $("#steps").innerHTML = S.stage === "intro" ? "" : h;
+  }
+
+  function render() {
+    steps();
+    document.body.classList.toggle("is-pair", S.stage === "pair");
+    if (S.stage === "pair") return renderPair();
+    if (S.stage === "more") return renderMore();
+    if (S.stage === "done") return renderDone();
+    return renderIntro();
+  }
+
+  /* ---------- 开场 ---------- */
+  function renderIntro() {
+    var app = $("#app");
+    app.className = "wrap view";
+    app.innerHTML =
+      '<section class="card"><h1 style="font:600 20px/1.4 var(--f-ui)">哪一版英文商品页更好？</h1>' +
+      '<p class="lead">看 2 组英文商品页，每组选出你觉得更好的一版。没有标准答案，按第一感觉选。匿名，约 5 分钟。</p>' +
+      '<p class="lead en" style="font-size:13px">Compare 2 pairs of English product pages and pick the better one in each. No right answers — go with your first impression. Anonymous; about 5 minutes.</p>' +
+      '<ol class="howto"><li><b>1</b><span>点“版本 A”或“版本 B”切换着看（也可以左右滑）<span class="en">Tap “Version A / B” to switch (or swipe)</span></span></li>' +
+      '<li><b>2</b><span>两版都看过后，在底部选更好的一版<span class="en">After viewing both, choose at the bottom</span></span></li>' +
+      '<li><b>3</b><span>最后点“去提交”，在问卷星点“提交”<span class="en">Finally tap “Submit” on the survey page</span></span></li></ol></section>' +
+      '<section class="card" id="bgCard">' + BG.map(function (g) {
+        return '<div class="qg"><div class="qg__t">' + esc(g[1]) + '<span class="en">' + esc(g[2]) + '</span></div><div class="opts" role="group" aria-label="' + esc(g[1]) + '">' +
+          g[3].map(function (o) { return '<button class="opt" data-bg="' + g[0] + '" data-v="' + o[0] + '" aria-pressed="' + (S.bg[g[0]] === o[0]) + '">' + esc(o[1]) + '<span>' + esc(o[2]) + '</span></button>'; }).join("") + '</div></div>';
+      }).join("") + '</section>' +
+      '<label class="consent card"><input type="checkbox" id="consent"' + (S.consent ? " checked" : "") + '><span>我自愿参加，结果只用于学术研究，可以随时退出。<span class="en">I agree to take part; results are for academic research only, and I may stop at any time.</span></span></label>' +
+      '<button class="btn btn--primary btn--block" id="go" style="min-height:54px">开始 · Start</button>' +
+      '<p class="lead en" id="goHint" style="text-align:center"></p>';
+    function ready() {
+      var ok = BG.every(function (g) { return S.bg[g[0]]; }) && S.consent;
+      $("#go").disabled = !ok;
+      $("#goHint").textContent = ok ? "" : "请先回答上面 3 个小问题并勾选同意 · Please answer the 3 questions and tick the box";
+    }
+    app.onclick = function (e) {
+      var b = e.target.closest("[data-bg]"); if (!b) return;
+      S.bg[b.getAttribute("data-bg")] = b.getAttribute("data-v"); save();
+      b.parentNode.querySelectorAll(".opt").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+      ready();
+    };
+    $("#consent").onchange = function () { S.consent = this.checked; save(); ready(); };
+    $("#go").onclick = function () { S.stage = "pair"; S.idx = 0; save(); tStart = Date.now(); render(); window.scrollTo(0, 0); };
+    ready();
+  }
+
+  /* ---------- 一组 ---------- */
+  function verHTML(pr, side) {
+    var c = versionOf(pr, side);
+    return '<article class="card ver" id="ver' + side + '" aria-label="版本 ' + side + '"' + (!WIDE.matches && pr.view !== side ? " hidden" : "") + '>' +
+      '<div class="ver__lab"><b>版本 ' + side + ' · VERSION ' + side + '</b></div>' +
+      '<h2 lang="en">' + esc(c.title) + '</h2><ul lang="en">' + c.bullets.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></article>";
+  }
+  function renderPair() {
+    var pr = S.pairs[S.idx], prod = DATA.products[pr.p], app = $("#app");
+    if (WIDE.matches) { pr.seenA = pr.seenB = true; }
+    if (pr.view === "A") pr.seenA = true; else pr.seenB = true;
+    app.className = "wrap wrap--pair view";
+    app.innerHTML =
+      '<section class="card"><div class="eyebrow">第 ' + (S.idx + 1) + ' 组 · PAIR ' + (S.idx + 1) + (S.idx === 2 ? "（加做 · bonus）" : "") + '</div>' +
+      '<div class="prod">' + esc(prod.zh) + '</div><span class="en">' + esc(prod.en) + '</span>' +
+      '<p class="ask">如果这是美国网店上的商品页，哪一版更好？<span class="en">If this were a product page on a US online store, which version is better?</span></p></section>' +
+      '<div class="switch" role="tablist" aria-label="切换版本">' + ["A", "B"].map(function (s) {
+        return '<button role="tab" data-side="' + s + '" aria-selected="' + (pr.view === s) + '">版本 ' + s + (pr["seen" + s] && pr.view !== s ? ' <span class="seen">✓ 看过</span>' : "") + "</button>";
+      }).join("") + "</div>" +
+      '<div class="vers" id="vers">' + verHTML(pr, "A") + verHTML(pr, "B") + "</div>" +
+      '<p class="nudge" id="nudge"></p><div class="pad"></div>' +
+      '<div class="choose"><div class="wrap wrap--pair"><div class="choose__q">哪一版更好？ · Which is better?</div><div class="choose__btns">' +
+      [["A", "A 更好", "A is better"], ["E", "差不多", "About the same"], ["B", "B 更好", "B is better"]].map(function (o) {
+        return '<button class="pick" data-pick="' + o[0] + '" aria-pressed="' + (pr.choice === o[0]) + '">' + o[1] + "<span>" + o[2] + "</span></button>";
+      }).join("") + '</div><p class="choose__hint" id="chHint"></p></div></div>';
+    updatePair();
+    var tx = null, ty = 0;
+    $("#vers").addEventListener("touchstart", function (e) { var t = e.changedTouches[0]; tx = t.clientX; ty = t.clientY; }, { passive: true });
+    $("#vers").addEventListener("touchend", function (e) {
+      if (tx == null) return; var t = e.changedTouches[0], dx = t.clientX - tx, dy = t.clientY - ty; tx = null;
+      if (Math.abs(dx) > 60 && Math.abs(dy) < 50) setView(dx < 0 ? "B" : "A");
+    }, { passive: true });
+  }
+  function updatePair() {
+    var pr = S.pairs[S.idx], both = pr.seenA && pr.seenB;
+    document.querySelectorAll(".pick").forEach(function (b) { b.disabled = !both; });
+    $("#chHint").textContent = both ? "选好后可以补充原因，也可以直接下一组 · You can add reasons or move on" : "两版都看过后才能选 · View both versions first";
+    var other = pr.view === "A" ? "B" : "A";
+    $("#nudge").innerHTML = WIDE.matches ? "" : pr["seen" + other] ? '两版都看过了，可以在下方选了；也可以 <button data-side="' + other + '">再看看版本 ' + other + "</button>" :
+      '看完了？点上面的 <button data-side="' + other + '">版本 ' + other + "</button> 接着看 · Next: Version " + other;
+  }
+  function setView(side) {
+    var pr = S.pairs[S.idx]; if (pr.view === side || WIDE.matches) return;
+    pr.view = side; pr["seen" + side] = true; save();
+    ["A", "B"].forEach(function (s) { $("#ver" + s).hidden = s !== side; });
+    document.querySelectorAll(".switch [data-side]").forEach(function (b) {
+      var s = b.getAttribute("data-side"); b.setAttribute("aria-selected", String(s === side));
+      b.innerHTML = "版本 " + s + (pr["seen" + s] && s !== side ? ' <span class="seen">✓ 看过</span>' : "");
+    });
+    updatePair();
+    var card = $("#ver" + side); if (card.getBoundingClientRect().top < 110) card.scrollIntoView({ block: "start" });
+  }
+  document.addEventListener("click", function (e) {
+    if (S.stage !== "pair") return;
+    var sd = e.target.closest("[data-side]"); if (sd) { setView(sd.getAttribute("data-side")); return; }
+    var pk = e.target.closest("[data-pick]"); if (pk && !pk.disabled) {
+      var pr = S.pairs[S.idx]; pr.choice = pk.getAttribute("data-pick"); if (pr.choice === "E") pr.reasons = 0;
+      pr.ms += Date.now() - tStart; tStart = Date.now(); save();
+      document.querySelectorAll(".pick").forEach(function (b) { b.setAttribute("aria-pressed", String(b === pk)); });
+      openReasons();
+    }
+  });
+
+  /* ---------- 原因 ---------- */
+  function openReasons() {
+    var pr = S.pairs[S.idx], last = S.idx >= S.n - 1;
+    var label = pr.choice === "E" ? "你选了“差不多”" : "你选了版本 " + pr.choice;
+    $("#sheetIn").innerHTML = '<h3 id="sheetT">' + label + (pr.choice === "E" ? "" : "。主要原因？<span class=\"en\" style=\"display:inline;margin-left:4px\">Why? (optional)</span>") + "</h3>" +
+      (pr.choice === "E" ? '<p class="lead">两版差不多也是有用的答案。<span class="en">“About the same” is a useful answer too.</span></p>' :
+        '<p class="lead" style="font-size:13px">可多选，也可以不选 · Choose any, or none</p><div class="chips">' + REASONS.map(function (r) {
+          return '<button class="opt" data-r="' + r[0] + '" aria-pressed="' + Boolean(pr.reasons & r[0]) + '">' + r[1] + "<span>" + r[2] + "</span></button>";
+        }).join("") + "</div>") +
+      '<div class="sheet__acts"><button class="btn" id="chg">改选 · Change</button><button class="btn btn--primary" id="nxt">' + (last ? "完成 · Finish" : "下一组 · Next pair") + "</button></div>";
+    $("#scrim").hidden = false; $("#sheet").hidden = false;
+    $("#sheetIn").onclick = function (e) {
+      var r = e.target.closest("[data-r]"); if (!r) return;
+      pr.reasons ^= +r.getAttribute("data-r"); r.setAttribute("aria-pressed", String(Boolean(pr.reasons & +r.getAttribute("data-r")))); save();
+    };
+    $("#chg").onclick = closeSheet;
+    $("#nxt").onclick = function () {
+      closeSheet();
+      if (S.idx < S.n - 1) { S.idx++; } else { S.stage = S.n < 3 ? "more" : "done"; }
+      save(); tStart = Date.now(); render(); window.scrollTo(0, 0);
+    };
+    setTimeout(function () { $("#nxt").focus(); }, 30);
+  }
+  function closeSheet() { $("#scrim").hidden = true; $("#sheet").hidden = true; tStart = Date.now(); }
+  $("#scrim").onclick = closeSheet;
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("#sheet").hidden) closeSheet(); });
+
+  /* ---------- 加做一组？ ---------- */
+  function renderMore() {
+    var app = $("#app"); app.className = "wrap view";
+    app.innerHTML = '<section class="card done"><h1>谢谢！两组都选好了</h1><p class="lead">还愿意再看 1 组吗？大约 2 分钟，多一组数据对我们很有帮助。<span class="en">Thanks! Would you like to do one more pair (about 2 minutes)? It helps a lot.</span></p></section>' +
+      '<button class="btn btn--primary btn--block" id="more" style="min-height:54px">再看一组 · One more pair</button>' +
+      '<button class="btn btn--block" id="skip">不了，去提交 · No, submit now</button>';
+    $("#more").onclick = function () { S.n = 3; S.idx = 2; S.stage = "pair"; save(); tStart = Date.now(); render(); window.scrollTo(0, 0); };
+    $("#skip").onclick = function () { S.stage = "done"; save(); render(); window.scrollTo(0, 0); };
+  }
+
+  /* ---------- 提交 ---------- */
+  function renderDone() {
+    var app = $("#app"), url = submitUrl(), c = code();
+    app.className = "wrap view";
+    app.innerHTML = '<section class="card done"><h1>' + (S.submitted ? "已经去提交过了，谢谢！" : "最后一步：提交") + "</h1>" +
+      '<p class="lead">点下面的按钮会打开问卷星，你的选择已经自动带上，<b>直接点页面底部的“提交”</b>就完成了。想说的话可以写在留言框里（选填）。</p>' +
+      '<p class="lead en">The button opens the survey site with your answers attached — just tap “Submit” (提交) at the bottom. Comments are optional.</p></section>' +
+      (url ? '<a class="btn btn--primary btn--block" id="sub" href="' + esc(url) + '" style="min-height:56px;text-decoration:none">' + (S.submitted ? "再打开一次提交页 · Open again" : "去提交 · Submit") + "</a>"
+           : '<p class="card lead">提交链接还没设置（测试阶段）。· The submit link is not set yet.</p>') +
+      '<p class="code">答案码 · Answer code：<span id="cd">' + esc(c) + '</span><button class="link" id="cp">复制 · Copy</button></p>' +
+      '<p class="lead en" style="font-size:12px">提交页如果要求填写答案码，粘贴上面这串字符即可。· If the survey page asks for an answer code, paste the code above.</p>';
+    if (url) $("#sub").onclick = function () { S.submitted = true; save(); };
+    $("#cp").onclick = function () {
+      var done = function () { toast("已复制 · Copied"); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(c).then(done, fallback); else fallback();
+      function fallback() { var r = document.createRange(); r.selectNodeContents($("#cd")); var s = getSelection(); s.removeAllRanges(); s.addRange(r); try { document.execCommand("copy"); done(); } catch (e) { toast("请长按选中后复制 · Long-press to copy"); } }
+    };
+  }
+
+  WIDE.addEventListener && WIDE.addEventListener("change", function () { if (S.stage === "pair") renderPair(); });
+  render();
+})();
+</script>
+</body>
+</html>
