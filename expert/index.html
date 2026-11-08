@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="robots" content="noindex">
+<title>农产品英文商品页专家评审</title>
+<style>
+  :root { --ink: #1d2420; --ink-2: #545e57; --rule: #d6dbd2; --go: #1f6f4a; --page: #fbfbf7; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--page); color: var(--ink);
+    font: 16px/1.65 system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+  main { max-width: 440px; margin: 0 auto; padding: 56px 20px 40px; }
+  h1 { font-size: 21px; line-height: 1.45; margin: 0 0 18px; }
+  h1 .en { display: block; font-size: 15px; font-weight: 500; color: var(--ink-2); margin-top: 4px; }
+  .status { color: var(--ink-2); margin: 0 0 22px; }
+  .btn { display: block; text-align: center; background: var(--go); color: #fff; text-decoration: none;
+    font-size: 17px; font-weight: 600; padding: 14px 16px; border-radius: 10px; }
+  .btn:active { opacity: .85; }
+  .btn[hidden] { display: none; }
+  ul { margin: 22px 0 0; padding: 16px 0 0 18px; border-top: 1px solid var(--rule); color: var(--ink-2); font-size: 14px; }
+  li { margin: 4px 0; }
+  @media (prefers-color-scheme: dark) {
+    :root { --ink: #e8ece6; --ink-2: #a9b2ab; --rule: #333a35; --go: #2f8a5e; --page: #151916; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>农产品英文商品页专家评审</h1>
+  <p class="status" id="st">正在打开问卷……</p>
+  <a class="btn" id="go" href="https://v.wjx.cn/vm/wvbHwBf.aspx" >开始填写</a>
+  <ul><li>如果几秒后还没有打开，请点上面的按钮。</li><li>约 8–10 分钟，请一次填完；中途退出后答案可能不会保存。</li><li>问卷由问卷星提供；提交后如出现广告页面，与本研究无关，直接关闭即可。</li></ul>
+</main>
+<script>
+(function () {
+  var V = [{"code": "E1", "url": "https://v.wjx.cn/vm/wvbHwBf.aspx", "weight": 1.0}, {"code": "E2", "url": "https://v.wjx.cn/vm/YEnTMLv.aspx", "weight": 1.0}, {"code": "E3", "url": "https://v.wjx.cn/vm/YoTJ3zn.aspx", "weight": 1.0}];
+  var KEY = "agri_expert_v1";
+  var pick = null, item = null, i, total = 0, r;
+  try { pick = window.localStorage.getItem(KEY); } catch (e) { pick = null; }
+  for (i = 0; i < V.length; i++) { if (V[i].code === pick && V[i].url) { item = V[i]; } }
+  if (!item) {
+    for (i = 0; i < V.length; i++) { if (V[i].url && V[i].weight > 0) { total += V[i].weight; } }
+    r = Math.random() * total;
+    for (i = 0; i < V.length; i++) {
+      if (!V[i].url || V[i].weight <= 0) { continue; }
+      r -= V[i].weight;
+      if (r < 0) { item = V[i]; break; }
+    }
+    if (!item && total > 0) { for (i = V.length - 1; i >= 0; i--) { if (V[i].url && V[i].weight > 0) { item = V[i]; break; } } }
+    if (item) { try { window.localStorage.setItem(KEY, item.code); } catch (e) {} }
+  }
+  if (!item) {
+    document.getElementById("st").textContent = "问卷暂未开放。/ The survey is not open yet.";
+    document.getElementById("go").hidden = true;
+    return;
+  }
+  document.getElementById("go").hidden = false;
+  document.getElementById("go").href = item.url;
+  setTimeout(function () { window.location.replace(item.url); }, 250);
+})();
+</script>
+</body>
+</html>
